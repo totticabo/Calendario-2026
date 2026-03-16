@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #080810;
+  color: #e8e8f0;
+  font-family: 'Space Mono', monospace;
+  min-height: 100vh;
+  padding: 20px 14px 60px;
+  text-transform: uppercase;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 40% at 20% 10%, #4488ff20 0%, transparent 70%),
+              radial-gradient(ellipse 50% 50% at 80% 80%, #ffd70020 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+.wrap { position: relative; z-index: 1; }
+.header { text-align: center; margin-bottom: 20px; }
+.header h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3.5rem, 18vw, 7rem);
+  background: linear-gradient(135deg, #4488ff, #ffd700, #39ff14);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+.header p { font-size: 0.6rem; color: #6b6b8a; letter-spacing: 0.25em; margin-top: 4px; }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 24px;
+  padding: 14px 16px;
+  background: #ffffff08;
+  border: 1px solid #ffffff18;
+  border-radius: 14px;
+}
+.legend-title {
+  width: 100%;
+  text-align: center;
+  font-size: 0.55rem;
+  letter-spacing: 0.25em;
+  color: #9090aa;
+  margin-bottom: 4px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 2px solid;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+.month-block { margin-bottom: 32px; }
+.month-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 0.15em;
+  color: #aaaacc;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ffffff20;
+  margin-bottom: 10px;
+}
+.grid-head {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  margin-bottom: 3px;
+}
+.grid-head span {
+  text-align: center;
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: #8888aa;
+  letter-spacing: 0.08em;
+  padding: 3px 0;
+}
+.grid-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.day-cell {
+  min-height: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  color: #e8e8f0;
+  cursor: default;
+  overflow: hidden;
+  padding: 3px 2px 3px;
+  position: relative;
+}
+.day-cell.has-event {
+  cursor: pointer;
+  border-width: 2px;
+}
+.day-cell.has-event:active { transform: scale(0.92); }
+
+.day-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(0.8rem, 3vw, 1.2rem);
+  line-height: 1.1;
+  text-align: center;
+  width: 100%;
+}
+
+/* CUMPLE */
+.cumple-name {
+  font-size: clamp(0.5rem, 2.2vw, 0.72rem);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-align: center;
+  width: calc(100% - 2px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #000000;
+  background: #ffd700;
+  line-height: 1.5;
+  padding: 0 2px;
+  text-transform: uppercase;
+  border-radius: 2px;
+}
+.cumple-line {
+  width: calc(100% - 4px);
+  height: 2px;
+  background: #ffd700;
+  border-radius: 2px;
+  margin-bottom: 1px;
+  flex-shrink: 0;
+}
+
+/* Normal event label */
+.event-dot {
+  font-size: clamp(0.5rem, 2.2vw, 0.75rem);
+  text-align: center;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 1px;
+  line-height: 1.3;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Caniche en Lanzarote — barra continua abajo */
+.caniche-bar {
+  position: absolute;
+  bottom: 0;
+  left: -2px;
+  right: -2px;
+  height: 5px;
+  background: #cc2222;
+  flex-shrink: 0;
+}
+.caniche-bar.start { left: 4px; border-radius: 4px 0 0 4px; }
+.caniche-bar.end   { right: 4px; border-radius: 0 4px 4px 0; }
+.caniche-bar.middle { border-radius: 0; }
+.caniche-label {
+  position: absolute;
+  bottom: 7px;
+  left: 0; right: 0;
+  font-size: clamp(0.32rem, 1.3vw, 0.45rem);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-align: center;
+  text-transform: uppercase;
+  color: #cc2222;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 2px;
+}
+
+/* Madrid — dentro de la celda */
+.madrid-label {
+  font-size: clamp(0.5rem, 2.2vw, 0.72rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+  width: calc(100% - 2px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #000000;
+  background: #ff8c44;
+  line-height: 1.4;
+  padding: 0 2px;
+  text-transform: uppercase;
+  border-radius: 2px;
+}
+.madrid-line {
+  width: calc(100% - 4px);
+  height: 2px;
+  background: #ff8c44;
+  border-radius: 2px;
+  margin-bottom: 1px;
+  flex-shrink: 0;
+}
+
+/* Modal */
+.overlay {
+  position: fixed; inset: 0;
+  background: #000000dd;
+  z-index: 100;
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+  backdrop-filter: blur(6px);
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: #13131f;
+  border: 2px solid #ffffff22; border-bottom: none;
+  border-radius: 24px 24px 0 0;
+  width: 100%; max-width: 500px; max-height: 85vh;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  padding-bottom: 30px;
+}
+.overlay.open .modal { transform: translateY(0); }
+.handle { width: 40px; height: 5px; background: #ffffff30; border-radius: 4px; margin: 16px auto 0; }
+.modal-header { padding: 18px 22px 14px; border-bottom: 1px solid #ffffff18; position: relative; }
+.modal-date-label { font-size: 0.62rem; letter-spacing: 0.22em; color: #8888aa; margin-bottom: 4px; }
+.modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; line-height: 1; letter-spacing: 0.04em; }
+.modal-category { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.2em; color: #8888aa; margin-top: 4px; }
+.close-btn { position: absolute; right: 18px; top: 18px; width: 32px; height: 32px; background: #ffffff15; border: none; border-radius: 50%; color: #aaaacc; font-size: 1rem; cursor: pointer; font-weight: 700; }
+.modal-body { padding: 18px 22px; }
+.modal-body h3 { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.28em; color: #8888aa; margin-bottom: 14px; }
+.person-list { display: flex; flex-direction: column; gap: 8px; }
+.person-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 13px 16px;
+  background: #ffffff08; border: 1px solid #ffffff12;
+  border-radius: 12px; cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.chk {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 2px solid #ffffff25;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.2s; font-size: 0.8rem; font-weight: 700; color: #000;
+}
+.person-name { font-size: 0.9rem; font-weight: 700; letter-spacing: 0.06em; }
+.summary { margin-top: 18px; padding: 14px 16px; background: #ffffff08; border-radius: 12px; text-align: center; }
+.summary-num { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; display: block; }
+.summary-label { font-size: 0.62rem; font-weight: 700; color: #8888aa; letter-spacing: 0.12em; }
+
+.multi-picker { padding: 18px 22px; }
+.multi-picker h3 { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.28em; color: #8888aa; margin-bottom: 14px; }
+.multi-btn {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 16px; margin-bottom: 8px;
+  border-radius: 12px; border: 2px solid;
+  cursor: pointer; background: transparent;
+  width: 100%; text-align: left;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.8rem; font-weight: 700;
+  color: #e8e8f0; letter-spacing: 0.06em;
+  text-transform: uppercase;
+  -webkit-tap-highlight-color: transparent;
+}
+.multi-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>2026</h1>
+    <p>TEMPORADA</p>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div id="cal"></div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal">
+    <div class="handle"></div>
+    <div id="modal-inner"></div>
+  </div>
+</div>
+
+<script>
+const PEOPLE = ['Meri','Juli','Marti','Fercho','Juana','Clara','Chulo','Bomba','Totti'];
+const MONTHS = [
+  {name:'Marzo',idx:2},{name:'Abril',idx:3},{name:'Mayo',idx:4},
+  {name:'Junio',idx:5},{name:'Julio',idx:6},{name:'Agosto',idx:7},{name:'Septiembre',idx:8}
+];
+const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DAYS = ['D','L','M','X','J','V','S'];
+
+const CATS = {
+  nom:     { label: 'NOM',         color: '#222222' },
+  nacar:   { label: 'Nacar',       color: '#1a5c2e' },
+  brunch:  { label: 'Brunch',      color: '#7c3aed' },
+  input:   { label: 'Input',       color: '#e8620a' },
+  output:  { label: 'Output',      color: '#b8962e' },
+  recital: { label: 'Recital',     color: '#4499ff' },
+  cumple:  { label: 'Cumple',      color: '#ffd700' },
+  sunset:  { label: 'Sunset Trip', color: '#39ff14' },
+  viaje:   { label: 'Viaje',       color: '#ff8c44' },
+};
+
+const EVENTS = [
+  // Nacar
+  {id:'mita-gami',   day:21, month:2, name:'Mita Gami',    cat:'nacar'},
+  // Input
+  {id:'adam-beyer',  day:2,  month:3, name:'Adam Beyer',   cat:'input'},
+  // Output
+  {id:'pawsa',       day:3,  month:3, name:'Pawsa',        cat:'output'},
+  // NOM
+  {id:'nick-warren', day:18, month:3, name:'Nick Warren',  cat:'nom'},
+  {id:'guy-j',       day:25, month:3, name:'Guy J AN',     cat:'nom'},
+  // Recitales
+  {id:'guasones',    day:1,  month:4, name:'Guasones',     cat:'recital'},
+  {id:'lavela',      day:23, month:4, name:'La Vela',      cat:'recital'},
+  // Cumples mayo
+  {id:'cumple-jua',  day:17, month:4, name:'Jua',          cat:'cumple'},
+  {id:'cumple-fer',  day:24, month:4, name:'Fer',          cat:'cumple'},
+  {id:'cumple-tot',  day:29, month:4, name:'Totti',        cat:'cumple'},
+  // Brunch
+  {id:'boris',       day:24, month:4, name:'Boris',        cat:'brunch'},
+  // Sunset
+  {id:'hernan',      day:30, month:4, name:'Hernan',       cat:'sunset'},
+  // Output junio
+  // Brunch Festival — agosto
+  {id:'brunch-fest-7', day:7, month:7, name:'Brunch Fest', cat:'brunch'},
+  {id:'brunch-fest-8', day:8, month:7, name:'Brunch Fest', cat:'brunch'},
+  {id:'brunch-fest-9', day:9, month:7, name:'Brunch Fest', cat:'brunch'},
+  // Output junio
+  {id:'camelphat',   day:19, month:5, name:'Camelphat',    cat:'output'},
+  {id:'anotr',       day:20, month:5, name:'ANOTR',        cat:'output'},
+  // Cumples julio
+  {id:'cumple-chu',  day:1,  month:6, name:'Chulo',        cat:'cumple'},
+  {id:'cumple-mer',  day:2,  month:6, name:'Meri & Chafa', cat:'cumple'},
+];
+
+
+
+const MADRID_DAYS = [29,30,31];
+const MADRID_MONTH = 4;
+const MADRID_LABELS = {29:'✈ Madrid', 30:'Madrid ✈', 31:'Madrid ✈'};
+
+const CANICHE_START = 9;
+const CANICHE_END = 28;
+const CANICHE_MONTH = 6; // julio
+const CANICHE_COLOR = '#cc2222';
+const LEGEND_CATS = ['nom','nacar','input','output','brunch','recital','cumple','sunset','viaje'];
+
+function getColor(ev){ return ev.color || CATS[ev.cat].color; }
+// ─── SHARED STORAGE via JSONBin ───────────────────────────────
+// 1. Andá a https://jsonbin.io → Create Account (gratis)
+// 2. Dashboard → API Keys → copiar tu "Secret Key"
+// 3. Pegala acá abajo:
+const JSONBIN_API_KEY = '$2a$10$zyz3ISMS5Y7ZVsez6zQxRuAa3ZvUPlp.x6RfGf3iHzP8REO9fRvvO';
+
+// 4. La primera vez que abras el calendario con la key puesta,
+//    se va a crear el bin automáticamente y guardar el ID en localStorage.
+//    A partir de ahí todos comparten los mismos votos.
+
+let BIN_ID = '69b822e6aa77b81da9ed22e3'; localStorage.setItem('cal_bin_id', BIN_ID);
+let remoteData = {};
+let syncTimeout = null;
+
+async function loadRemote(){
+  if(!BIN_ID || JSONBIN_API_KEY === 'TU_API_KEY_ACA') return;
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+      headers: { 'X-Master-Key': JSONBIN_API_KEY }
+    });
+    const json = await res.json();
+    remoteData = (json.record && json.record.votos) ? json.record.votos : (json.record || {});
+  } catch(e){ console.warn('No se pudo cargar desde JSONBin', e); }
+}
+
+async function saveRemote(){
+  if(!JSONBIN_API_KEY || JSONBIN_API_KEY === 'TU_API_KEY_ACA') return;
+  try {
+    await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': JSONBIN_API_KEY
+      },
+      body: JSON.stringify({votos: remoteData})
+    });
+  } catch(e){ console.warn('No se pudo guardar en JSONBin', e); }
+}
+
+function scheduleSave(){
+  if(syncTimeout) clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(saveRemote, 800);
+}
+
+function getChecked(id){
+  if(JSONBIN_API_KEY !== 'TU_API_KEY_ACA' && remoteData[id]) return remoteData[id];
+  try{ return JSON.parse(localStorage.getItem('ev_'+id)||'{}'); }catch{return{};}
+}
+
+function saveChecked(id, d){
+  // Always save locally as backup
+  try{ localStorage.setItem('ev_'+id, JSON.stringify(d)); }catch{}
+  // Save to shared remote
+  if(JSONBIN_API_KEY !== 'TU_API_KEY_ACA'){
+    remoteData[id] = d;
+    scheduleSave();
+  }
+}
+
+// Poll for updates every 15 seconds so everyone sees changes
+async function pollUpdates(){
+  await loadRemote();
+  buildCal();
+  setTimeout(pollUpdates, 15000);
+}
+
+function buildLegend(){
+  const leg = document.getElementById('legend');
+  const items = LEGEND_CATS.map(k=>{
+    const isDark = ['nom','nacar'].includes(k);
+    const bg = isDark ? CATS[k].color : 'transparent';
+    const txt = isDark ? '#ffffff' : CATS[k].color;
+    const border = CATS[k].color === '#222222' ? '#888888' : CATS[k].color;
+    return `<div class="legend-item" style="border-color:${border};color:${txt};background:${bg}">
+      <div class="legend-dot" style="background:${isDark ? '#ffffff' : CATS[k].color}"></div>
+      ${CATS[k].label}
+    </div>`;
+  }).join('');
+  leg.innerHTML = `<div class="legend-title">Referencias</div>${items}`;
+}
+
+function getCaniLabel(d){
+  if(d === CANICHE_START) return 'Caniche en Lanzarote';
+  if(d === CANICHE_END)   return 'Todo es tristeza';
+  return '';
+}
+
+function cellHTML(d, evs, monthIdx){
+  const isMadrid = monthIdx === MADRID_MONTH && MADRID_DAYS.includes(d);
+  const isCaniche = monthIdx === CANICHE_MONTH && d >= CANICHE_START && d <= CANICHE_END;
+  const cumples = evs.filter(e=>e.cat==='cumple');
+  const others  = evs.filter(e=>e.cat!=='cumple');
+
+  // Determine dominant color — caniche days keep neutral
+  let dominant = null;
+  if(others.length) dominant = getColor(others[0]);
+  else if(cumples.length) dominant = getColor(cumples[0]);
+  else if(isMadrid) dominant = '#ff8c44';
+
+  if(!dominant && !isCaniche){
+    return `<div class="day-cell"><span class="day-num" style="color:#555570">${d}</span></div>`;
+  }
+
+  const ids = evs.map(e=>e.id);
+  const clickFn = ids.length===1
+    ? `openModal('${ids[0]}')`
+    : ids.length>1
+      ? `openMulti('${ids.join(',')}')`
+      : '';
+
+  let inner = '';
+
+  // Cumple labels at top
+  cumples.forEach(ev => {
+    inner += `<span class="cumple-name">${ev.name}</span><div class="cumple-line"></div>`;
+  });
+
+  const domIsDark = dominant && (dominant === '#222222' || dominant === '#1a5c2e');
+  const dayColor = !dominant ? '#555570' : domIsDark ? (dominant === '#1a5c2e' ? '#4caf75' : '#aaaaaa') : dominant;
+  inner += `<span class="day-num" style="color:${dayColor}">${d}</span>`;
+
+  others.forEach(ev => {
+    const c = getColor(ev);
+    const isDark = ['nom','nacar'].includes(ev.cat);
+    if(isDark){
+      inner += `<span class="event-dot" style="background:${c};color:#ffffff;border-radius:2px;padding:0 2px">${ev.name}</span>`;
+    } else {
+      inner += `<span class="event-dot" style="color:${c}">${ev.name}</span>`;
+    }
+  });
+
+  // Madrid label at bottom
+  if(isMadrid){
+    inner += `<div class="madrid-line"></div><span class="madrid-label">${MADRID_LABELS[d]}</span>`;
+  }
+
+  // Caniche bar at bottom — continuous underline, text only on first/last
+  if(isCaniche){
+    const pos = d === CANICHE_START ? 'start' : d === CANICHE_END ? 'end' : 'middle';
+    const label = getCaniLabel(d);
+    inner += `<div class="caniche-bar ${pos}"></div>`;
+    if(label) inner += `<div class="caniche-label">${label}</div>`;
+  }
+
+  const clickAttr = clickFn ? `onclick="${clickFn}"` : '';
+  const hasCursor = ids.length ? 'has-event' : '';
+  const bgColor = dominant ? `${dominant}44` : 'transparent';
+  const borderStyle = dominant
+    ? `border-color:${dominant};border-width:2px;border-style:solid`
+    : 'border:1px solid transparent';
+  return `<div class="day-cell ${hasCursor}"
+    style="background:${bgColor};${borderStyle}"
+    ${clickAttr}>${inner}</div>`;
+}
+
+function buildCal(){
+  const cal = document.getElementById('cal');
+  cal.innerHTML = '';
+  MONTHS.forEach(m => {
+    const block = document.createElement('div');
+    block.className = 'month-block';
+    const firstDay = new Date(2026, m.idx, 1).getDay();
+    const total    = new Date(2026, m.idx+1, 0).getDate();
+
+    let html = `<div class="month-name">${m.name}</div>
+    <div class="grid-head">${DAYS.map(d=>`<span>${d}</span>`).join('')}</div>
+    <div class="grid-days">`;
+
+    for(let i=0;i<firstDay;i++) html += `<div class="day-cell"></div>`;
+
+    for(let d=1;d<=total;d++){
+      const evs = EVENTS.filter(e=>e.day===d && e.month===m.idx);
+      html += cellHTML(d, evs, m.idx);
+    }
+    html += '</div>';
+    block.innerHTML = html;
+    cal.appendChild(block);
+  });
+}
+
+let currentId = null;
+
+function openMulti(idsStr){
+  const ids = idsStr.split(',');
+  const evs = ids.map(id=>EVENTS.find(e=>e.id===id));
+  document.getElementById('modal-inner').innerHTML = `
+    <div class="multi-picker">
+      <h3>¿Qué evento?</h3>
+      ${evs.map(ev=>`
+        <button class="multi-btn" style="border-color:${getColor(ev)};color:${getColor(ev)}" onclick="openModal('${ev.id}')">
+          <div class="multi-dot" style="background:${getColor(ev)}"></div>
+          ${ev.name} — ${CATS[ev.cat].label}
+        </button>`).join('')}
+    </div>`;
+  document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function openModal(id){
+  currentId = id;
+  const ev = EVENTS.find(e=>e.id===id);
+  const col = getColor(ev);
+  document.getElementById('modal-inner').innerHTML = `
+    <div class="modal-header">
+      <button class="close-btn" onclick="closeModal()">✕</button>
+      <div class="modal-date-label">${MONTH_NAMES[ev.month]} · ${ev.day}</div>
+      <div class="modal-title" style="color:${col}">${ev.name}</div>
+      <div class="modal-category">${CATS[ev.cat].label}</div>
+    </div>
+    <div class="modal-body">
+      <h3>¿Quién va?</h3>
+      <div class="person-list" id="person-list"></div>
+      <div class="summary">
+        <span class="summary-num" id="m-count" style="color:${col}">0</span>
+        <span class="summary-label">Van confirmados</span>
+      </div>
+    </div>`;
+  document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+  renderPeople(ev);
+}
+
+function renderPeople(ev){
+  const col = getColor(ev);
+  const checked = getChecked(ev.id);
+  const cnt = Object.values(checked).filter(Boolean).length;
+  const countEl = document.getElementById('m-count');
+  if(countEl) countEl.textContent = cnt;
+  const list = document.getElementById('person-list');
+  if(!list) return;
+  list.innerHTML = PEOPLE.map(p=>{
+    const on = !!checked[p];
+    return `<div class="person-item"
+      style="${on?`background:${col}25;border-color:${col}`:''}"
+      onclick="togglePerson('${p}')">
+      <div class="chk" style="${on?`background:${col};border-color:${col}`:''}">
+        ${on?'✓':''}
+      </div>
+      <span class="person-name" style="${on?`color:${col}`:''}">${p}</span>
+    </div>`;
+  }).join('');
+}
+
+function togglePerson(person){
+  const ev = EVENTS.find(e=>e.id===currentId);
+  const checked = getChecked(ev.id);
+  checked[person] = !checked[person];
+  saveChecked(ev.id, checked);
+  renderPeople(ev);
+  buildCal();
+}
+
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  document.body.style.overflow='';
+  currentId=null;
+}
+
+document.getElementById('overlay').onclick = e=>{
+  if(e.target===document.getElementById('overlay')) closeModal();
+};
+
+buildLegend();
+
+async function init(){
+  if(typeof JSONBIN_API_KEY !== 'undefined' && JSONBIN_API_KEY !== 'TU_API_KEY_ACA'){
+    await loadRemote();
+  }
+  buildCal();
+  // Start polling for shared updates
+  if(typeof JSONBIN_API_KEY !== 'undefined' && JSONBIN_API_KEY !== 'TU_API_KEY_ACA'){
+    setTimeout(pollUpdates, 15000);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
